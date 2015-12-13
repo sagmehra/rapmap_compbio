@@ -1,5 +1,0 @@
-/usr/rapmap_compbio/build/CMakeFiles/libjemalloc.dir
-/usr/rapmap_compbio/build/src/CMakeFiles/rapmap.dir
-/usr/rapmap_compbio/build/CMakeFiles/libsparsehash.dir
-/usr/rapmap_compbio/build/src/CMakeFiles/rsdic.dir
-/usr/rapmap_compbio/build/CMakeFiles/libjellyfish.dir
