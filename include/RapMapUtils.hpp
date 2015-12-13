@@ -256,10 +256,12 @@ namespace rapmap {
         QuasiAlignment(uint32_t tidIn, uint32_t posIn,
                 bool fwdIn, uint32_t readLenIn,
                 uint32_t fragLenIn = 0,
-                bool isPairedIn = false) :
+                bool isPairedIn = false,
+                std::string cigarString = "") :
             tid(tidIn), pos(posIn), fwd(fwdIn),
             readLen(readLenIn), fragLen(fragLenIn),
-            isPaired(isPairedIn)
+            isPaired(isPairedIn),
+            cigarString(cigarString)
 #ifdef RAPMAP_SALMON_SUPPORT
         ,format(LibraryFormat::formatFromID(0))
 #endif // RAPMAP_SALMON_SUPPORT
@@ -431,14 +433,22 @@ namespace rapmap {
     // Declarations for functions dealing with SAM formatting and output
     //
     inline void adjustOverhang(int32_t& pos, uint32_t readLen,
-		    uint32_t txpLen, FixedWriter& cigarStr) {
+		    uint32_t txpLen, FixedWriter& cigarStr, std::string cigarString) {
 
-        std::cout << "Here in adjustOverhang readLen:" << readLen << "pos:" << std::endl;
+        //std::cout << "Here in adjustOverhang readLen:" << readLen << "pos:" << std::endl;
 	    cigarStr.clear();
+
+        std::cout << cigarString << std::endl;
+        cigarStr.write(cigarString.c_str());
 
         //string output_from_aligner;
         //cigarStr.write(&out_from_aligner);
- 
+
+        // this dummy writing of CIGAR string is commented, instead
+        // actual cigar string passed from 
+
+
+        /*
 	    if (pos + readLen < 0) {
             cigarStr.write("{}S", readLen);
             pos = 0;
@@ -457,26 +467,27 @@ namespace rapmap {
 	    } else {
 		    cigarStr.write("{}M", readLen);
 	    }
+        */
     }
 
     inline void adjustOverhang(QuasiAlignment& qa, uint32_t txpLen,
-		    FixedWriter& cigarStr1, FixedWriter& cigarStr2) {
-	    if (qa.isPaired) { // both mapped
-		    adjustOverhang(qa.pos, qa.readLen, txpLen, cigarStr1);
-		    adjustOverhang(qa.matePos, qa.mateLen, txpLen, cigarStr2);
-	    } else if (qa.mateStatus == MateStatus::PAIRED_END_LEFT ) {
-		    // left read mapped
-		    adjustOverhang(qa.pos, qa.readLen, txpLen, cigarStr1);
-		    // right read un-mapped will just be read length * S
-		    cigarStr2.clear();
-		    cigarStr2.write("{}S", qa.mateLen);
-	    } else if (qa.mateStatus == MateStatus::PAIRED_END_RIGHT) {
-		    // right read mapped
-		    adjustOverhang(qa.pos, qa.readLen, txpLen, cigarStr2);
-		    // left read un-mapped will just be read length * S
-		    cigarStr1.clear();
-		    cigarStr1.write("{}S", qa.readLen);
-	    }
+            FixedWriter& cigarStr1, FixedWriter& cigarStr2) {
+        if (qa.isPaired) { // both mapped
+            adjustOverhang(qa.pos, qa.readLen, txpLen, cigarStr1, qa.cigarString);
+            adjustOverhang(qa.matePos, qa.mateLen, txpLen, cigarStr2, qa.cigarString);
+        } else if (qa.mateStatus == MateStatus::PAIRED_END_LEFT ) {
+            // left read mapped
+            adjustOverhang(qa.pos, qa.readLen, txpLen, cigarStr1, qa.cigarString);
+            // right read un-mapped will just be read length * S
+            cigarStr2.clear();
+            cigarStr2.write("{}S", qa.mateLen);
+        } else if (qa.mateStatus == MateStatus::PAIRED_END_RIGHT) {
+            // right read mapped
+            adjustOverhang(qa.pos, qa.readLen, txpLen, cigarStr2, qa.cigarString);
+            // left read un-mapped will just be read length * S
+            cigarStr1.clear();
+            cigarStr1.write("{}S", qa.readLen);
+        }
     }
 
 

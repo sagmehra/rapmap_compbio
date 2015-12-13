@@ -25,6 +25,8 @@ class SACollector {
         //auto& posIDs = rmi_->positionIDs;
         auto& rankDict = rmi_->rankDict;
         auto& txpStarts = rmi_->txpOffsets;
+        auto& txpLen = rmi_->txpLens;
+
         auto& SA = rmi_->SA;
         auto& khash = rmi_->khash;
         auto& text = rmi_->seq;
@@ -422,10 +424,12 @@ class SACollector {
             }
         }
         std::cout << "size:" << fwdSAInts.size() << std::endl;
+        
         for(int i = 0; i<fwdSAInts.size();i++) {
             std::cout << "match len:" << fwdSAInts[i].len << std::endl;
-            std::cout << "match start pos in read:" << fwdSAInts[i].queryPos << std::endl;
+            //std::cout << "match start pos in read:" << fwdSAInts[i].queryPos << std::endl;
         }
+        
 
 
         if (strictCheck) {
@@ -490,7 +494,10 @@ class SACollector {
             for(std::map<int, rapmap::utils::ProcessedSAHit>::iterator iter = processedHits.begin(); iter != processedHits.end(); ++iter)
             {
                 int k =  iter->first;
-                //std::cout << "Value here is: " << k << std::endl;
+
+                std::cout << "Read is: "<< read << std::endl;
+                std::cout << "Txcript is: "<< text.substr(txpStarts[k], txpLen[k]) << std::endl;
+
                 rapmap::utils::ProcessedSAHit val = iter->second;
                 std::vector<rapmap::utils::SATxpQueryPos> myVec = val.tqvec;
                 
@@ -503,8 +510,11 @@ class SACollector {
                     
                     // call aligner here
                     // append the aligner output to string
+                    // rmi
                 }
                 // hard coded for now for testing
+                // here iter is instance of processedHits which gets cigar string from aligner. This string goes 
+                // into hits at 
                 std::string s = "23M45S";
                 iter->second.cigarStr = s;
             }

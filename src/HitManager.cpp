@@ -31,7 +31,6 @@ namespace rapmap {
                 //}
 
                 // determine forward
-                // add cigar string from processedHits in hits here
                 hits.emplace_back(tid, hitPos, isFwd, readLen);
                 hits.back().mateStatus = mateStatus;
             }
@@ -55,9 +54,6 @@ namespace rapmap {
                 // If this is an *active* position list
                 if (ph.second.active) {
                     auto tid = ph.first;
-
-                    std::cout << "at collectHitsSimpleSA " << ph.second.cigarStr << std::endl;
-
                     auto minPosIt = std::min_element(ph.second.tqvec.begin(),
                             ph.second.tqvec.end(),
                             [](const SATxpQueryPos& a, const SATxpQueryPos& b) -> bool {
@@ -73,11 +69,14 @@ namespace rapmap {
                     int32_t hitPos = minPosIt->pos - minPosIt->queryPos;
                     bool isFwd = !hitRC;
                     //hits.emplace_back(tid, hitPos, isFwd, readLen, ph.second.cigarStr);
-                    hits.emplace_back(tid, hitPos, isFwd, readLen);
-                    hits.back().mateStatus = mateStatus;
+                    
+                    // add cigar string from processedHits in hits here
+                    // cigar string comes from processedHits which is instance of SAHitmap 
 
-                    //std::cerr << "begin:{}\n" << ph.second.tqvec.begin();
-                    //std::cerr << "end:{}\n" << ph.second.tqvec.end();
+                    std::cout << "at collectHitsSimpleSA " << ph.second.cigarStr << std::endl;
+
+                    hits.emplace_back(tid, hitPos, isFwd, readLen, 0, false, ph.second.cigarStr);
+                    hits.back().mateStatus = mateStatus;
 
                 }
             }
