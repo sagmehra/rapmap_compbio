@@ -1,0 +1,13 @@
+# Target labels
+ libsparsehash
+# Source files and their labels
+/usr/rapmap_compbio/build/CMakeFiles/libsparsehash
+/usr/rapmap_compbio/build/CMakeFiles/libsparsehash.rule
+/usr/rapmap_compbio/build/CMakeFiles/libsparsehash-complete.rule
+/usr/rapmap_compbio/build/libsparsehash-prefix/src/libsparsehash-stamp/libsparsehash-install.rule
+/usr/rapmap_compbio/build/libsparsehash-prefix/src/libsparsehash-stamp/libsparsehash-mkdir.rule
+/usr/rapmap_compbio/build/libsparsehash-prefix/src/libsparsehash-stamp/libsparsehash-download.rule
+/usr/rapmap_compbio/build/libsparsehash-prefix/src/libsparsehash-stamp/libsparsehash-update.rule
+/usr/rapmap_compbio/build/libsparsehash-prefix/src/libsparsehash-stamp/libsparsehash-patch.rule
+/usr/rapmap_compbio/build/libsparsehash-prefix/src/libsparsehash-stamp/libsparsehash-configure.rule
+/usr/rapmap_compbio/build/libsparsehash-prefix/src/libsparsehash-stamp/libsparsehash-build.rule

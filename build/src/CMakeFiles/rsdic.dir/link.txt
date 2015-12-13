@@ -1,0 +1,2 @@
+/usr/bin/ar cq librsdic.a  CMakeFiles/rsdic.dir/EnumCoder.cpp.o CMakeFiles/rsdic.dir/RSDic.cpp.o CMakeFiles/rsdic.dir/RSDicBuilder.cpp.o
+/usr/bin/ranlib librsdic.a
