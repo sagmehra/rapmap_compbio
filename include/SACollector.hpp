@@ -9,6 +9,10 @@
 #include <iterator>
 
 class SACollector {
+   
+   int gap_penalty = -2;
+   int match = 5;
+   int miss = -1;
     public:
 
     SACollector(RapMapSAIndex* rmi) : rmi_(rmi) {}
@@ -18,6 +22,7 @@ class SACollector {
 				SASearcher& saSearcher,
 				rapmap::utils::MateStatus mateStatus,
 				bool strictCheck = false) {
+
 
         using QuasiAlignment = rapmap::utils::QuasiAlignment;
         using MateStatus = rapmap::utils::MateStatus;
@@ -57,6 +62,7 @@ class SACollector {
         bool isRev = false;
         rapmap::utils::my_mer mer;
         rapmap::utils::my_mer rcMer;
+            
 
         enum HitStatus { ABSENT = -1, UNTESTED = 0, PRESENT = 1 };
         // Record if k-mers are hits in the
@@ -424,12 +430,10 @@ class SACollector {
             }
         }
         std::cout << "size:" << fwdSAInts.size() << std::endl;
-        
         for(int i = 0; i<fwdSAInts.size();i++) {
             std::cout << "match len:" << fwdSAInts[i].len << std::endl;
-            //std::cout << "match start pos in read:" << fwdSAInts[i].queryPos << std::endl;
+            std::cout << "match start pos in read:" << fwdSAInts[i].queryPos << std::endl;
         }
-        
 
 
         if (strictCheck) {
@@ -493,30 +497,63 @@ class SACollector {
             // iterates for all transcripts given from SAintersect
             for(std::map<int, rapmap::utils::ProcessedSAHit>::iterator iter = processedHits.begin(); iter != processedHits.end(); ++iter)
             {
-                int k =  iter->first;
-
-                std::cout << "Read is: "<< read << std::endl;
-                std::cout << "Txcript is: "<< text.substr(txpStarts[k], txpLen[k]) << std::endl;
-
+                //std::cout << "Value here is: " << k << std::endl;
                 rapmap::utils::ProcessedSAHit val = iter->second;
                 std::vector<rapmap::utils::SATxpQueryPos> myVec = val.tqvec;
                 
                 // initalize the cigar string here
-                for(int i=0;i<myVec.size();i++)
+                std::string aligned_str;
+                unsigned int indx = 0;
+
+                int k = iter->first;
+		if(myVec[0].pos > 0 && myVec[0].queryPos > 0) {
+
+		    std::string output = "";
+		    nw_align(text.substr(txpStarts[k], txpLen[k]), read, 0, 0, myVec[0].pos-1, myVec[0].queryPos-1, output);
+
+		    aligned_str.append(output);
+		}
+
+		std::string Txp = text.substr(txpStarts[k], txpLen[k]);
+
+		while(indx < myVec.size()-1)
                 {
-                    // append fwdSAInts[i].len M's here to string
-                    std::cout << "Genome position:" << myVec[i].pos << std::endl;
-                    std::cout << "Query position:" << myVec[i].queryPos << std::endl;
-                    
-                    // call aligner here
-                    // append the aligner output to string
-                    // rmi
+                    std::cout << "Genome position:" << myVec[indx].pos << std::endl;
+                    std::cout << "Query position:" << myVec[indx].queryPos << std::endl;
+
+		    int offset_txp = myVec[indx].pos+fwdSAInts[indx].len;
+		    int offset_read = myVec[indx].queryPos+fwdSAInts[indx].len;
+
+		    if(myVec[indx+1].queryPos <= offset_read || myVec[indx+1].pos <= offset_txp) {
+		        indx++;
+			continue;
+                    }
+
+                    // align 
+                    std::string output = "";
+		    nw_align(Txp, read, offset_txp, offset_read, myVec[indx+1].pos-offset_txp, myVec[indx+1].queryPos-offset_read, output);
+      
+
+                    // append aligned sequence
+		    aligned_str.append(output);
+
+		    indx++;
                 }
-                // hard coded for now for testing
-                // here iter is instance of processedHits which gets cigar string from aligner. This string goes 
-                // into hits at 
-                std::string s = "23M45S";
-                iter->second.cigarStr = s;
+
+		if(myVec[indx].pos+fwdSAInts[indx].len < Txp.size()-1 && 
+		   myVec[indx].queryPos+fwdSAInts[indx].len < read.size()-1)
+		{
+		   int offset_txp = myVec[indx].pos+fwdSAInts[indx].len;
+		   int offset_read = myVec[indx].queryPos+fwdSAInts[indx].len;
+
+		   std::string output = "";
+                   nw_align(Txp, read, offset_txp, offset_read, Txp.size()-offset_txp-1, read.size()-offset_read-1, output);
+
+		   aligned_str.append(output);
+                }
+	
+		// TO-DO: convert aligned to CIGAR
+                iter->second.cigarStr = aligned_str;
             }
 
             rapmap::hit_manager::collectHitsSimpleSA(processedHits, readLen, maxDist, hits, mateStatus);
@@ -606,6 +643,123 @@ class SACollector {
         // Return true if we had any valid hits and false otherwise.
         return foundHit;
         }
+
+
+        int get_match_score(char a, char b)
+        {
+           if(a == b)
+             return match;
+
+	   if(a == '-' || b == '-')
+	     return gap_penalty;
+
+           return miss;
+        }
+
+
+	void nw_align(const std::string seq_one, const std::string seq_two, int offset_seq1,
+			int offset_seq2, int seq1_len, int seq2_len, std::string &output)
+	{
+
+
+            std::string seq1 = seq_one.substr(offset_seq1, seq1_len);
+	    std::string seq2 = seq_two.substr(offset_seq2, seq2_len);
+
+	    int m = seq1_len;
+	    int n = seq2_len;
+
+	    std::vector<std::vector<int> > score(m+1, std::vector<int>(n+1));
+	
+	    for(int i=0; i<=m; i++)
+	        score[i][0] = gap_penalty * i;
+
+	    for(int i=0; i<=n; i++) 
+                score[0][i] = gap_penalty * i; 
+
+	    //std::cout << "\nDP Matrix Initialized" << std::endl;	
+
+	    int iden = 0;
+	    int del = 0;
+	    int ins = 0;
+
+	    for(int i=1; i<=m; i++) {
+		for(int j=1; j<=n; j++) {
+
+	           iden = score[i-1][j-1] + get_match_score(seq1[i-1], seq2[j-1]);
+		   del = score[i-1][j] + gap_penalty;
+		   ins = score[i][j-1] + gap_penalty;
+
+	           score[i][j] = std::max(std::max(iden, del), ins);
+		}
+	     }
+
+	     //std::cout << "Score Calculated!" << std::endl;
+
+
+	     std::string align1="", align2="";
+
+	     int i = m, j= n;
+
+	     int scr_cur;
+	     int scr_diag;
+	     int scr_left;
+	     int scr_up;
+
+	     while(i && j) {
+
+		scr_cur = score[i][j];
+		scr_diag = score[i-1][j-1];
+		scr_up = score[i][j-1];
+		scr_left = score[i-1][j];
+
+
+		if(scr_cur == scr_diag + get_match_score(seq1[i-1], seq2[j-1])) {
+		    align1 += seq1[i-1];
+		    align2 += seq2[j-1];
+
+		    i--;
+		    j--;
+		}
+		else if(scr_cur == scr_left + gap_penalty) {
+		    align1 += seq1[i-1];
+		    align2 += '-';
+			
+		    i--;
+		}
+		else if(scr_cur == scr_up + gap_penalty) {
+	           align1 += '-';
+		   align2 += seq2[j-1];
+		
+		   j--;
+		}	
+
+              }  
+
+
+	      while(i>0) {
+
+		align1 += seq1[i-1];
+		align2 += '-';
+		i--;
+
+              }   
+
+
+	      while(j > 0) {
+		align1 += '-';
+		align2 += seq2[j-1];
+		j--;
+	      }
+
+	      std::string temp(align2.rbegin(), align2.rend());
+	      std::string orig_seq(align1.rbegin(), align1.rend());
+
+
+              output.assign(temp);
+	      std::cout << "\nOutput   :  " << output << std::endl; 
+	      std::cout << "Sequence :  " << orig_seq << std::endl; 
+
+	}
 
     private:
         RapMapSAIndex* rmi_;
