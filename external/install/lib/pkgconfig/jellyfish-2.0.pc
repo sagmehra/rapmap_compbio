@@ -1,4 +1,4 @@
-prefix=/usr/rapmap_compbio/external/install
+prefix=/home/sagmehra/tem/rapmap_compbio/external/install
 exec_prefix=${prefix}
 libdir=${exec_prefix}/lib
 includedir=${prefix}/include

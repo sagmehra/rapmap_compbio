@@ -5,8 +5,8 @@ pref=$(basename $0 .sh)
 DIR=../bin
 JF="$DIR/jellyfish"
 [ -n "$VALGRIND" ] && JF="valgrind $JF"
-SRCDIR=/usr/rapmap_compbio/external/jellyfish-2.2.3
-BUILDDIR=/usr/rapmap_compbio/external/jellyfish-2.2.3
+SRCDIR=/home/sagmehra/tem/rapmap_compbio/external/jellyfish-2.2.3
+BUILDDIR=/home/sagmehra/tem/rapmap_compbio/external/jellyfish-2.2.3
 
 check () {
     cut -d\  -f 2 $1 | xargs md5sum | sort -k2,2 | diff -w $DIFFFLAGS $1 -

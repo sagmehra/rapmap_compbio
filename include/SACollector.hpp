@@ -10,7 +10,7 @@
 
 class SACollector {
    
-   int gap_penalty = -2;
+   int gap_penalty = -3;
    int match = 5;
    int miss = -1;
     public:
@@ -509,35 +509,42 @@ class SACollector {
 		if(myVec[0].pos > 0 && myVec[0].queryPos > 0) {
 
 		    std::string output = "";
-		    nw_align(text.substr(txpStarts[k], txpLen[k]), read, 0, 0, myVec[0].pos-1, myVec[0].queryPos-1, output);
-
+		    nw_align(text.substr(txpStarts[k], txpLen[k]), read, 0, 0, myVec[0].pos, myVec[0].queryPos, output);
 		    aligned_str.append(output);
 		}
 
 		std::string Txp = text.substr(txpStarts[k], txpLen[k]);
-
+		int offset_txp = myVec[indx].pos+fwdSAInts[indx].len;
+                int offset_read = myVec[indx].queryPos+fwdSAInts[indx].len;
+		aligned_str.append(Txp.substr(myVec[indx].pos,fwdSAInts[indx].len));
+     		std::cout << "Txp substring : " << Txp.substr(myVec[indx].pos,fwdSAInts[indx].len);
 		while(indx < myVec.size()-1)
                 {
                     std::cout << "Genome position:" << myVec[indx].pos << std::endl;
                     std::cout << "Query position:" << myVec[indx].queryPos << std::endl;
 
-		    int offset_txp = myVec[indx].pos+fwdSAInts[indx].len;
-		    int offset_read = myVec[indx].queryPos+fwdSAInts[indx].len;
+		    //int offset_txp = myVec[indx].pos+fwdSAInts[indx].len;
+		    //int offset_read = myVec[indx].queryPos+fwdSAInts[indx].len;
 
+ 
 		    if(myVec[indx+1].queryPos <= offset_read || myVec[indx+1].pos <= offset_txp) {
-		        indx++;
+		        std::cout << "Txp Offset : " << offset_txp << " Read Offset:" << offset_read << std::endl;
+			indx++;
 			continue;
                     }
 
                     // align 
                     std::string output = "";
 		    nw_align(Txp, read, offset_txp, offset_read, myVec[indx+1].pos-offset_txp, myVec[indx+1].queryPos-offset_read, output);
-      
 
                     // append aligned sequence
 		    aligned_str.append(output);
 
 		    indx++;
+		    aligned_str.append(Txp.substr(myVec[indx].pos,fwdSAInts[indx].len));
+     		    std::cout << "Txp substring : " << Txp.substr(myVec[indx].pos,fwdSAInts[indx].len);
+		    offset_txp = myVec[indx].pos+fwdSAInts[indx].len;
+                    offset_read = myVec[indx].queryPos+fwdSAInts[indx].len;
                 }
 
 		if(myVec[indx].pos+fwdSAInts[indx].len < Txp.size()-1 && 
@@ -547,7 +554,7 @@ class SACollector {
 		   int offset_read = myVec[indx].queryPos+fwdSAInts[indx].len;
 
 		   std::string output = "";
-                   nw_align(Txp, read, offset_txp, offset_read, Txp.size()-offset_txp-1, read.size()-offset_read-1, output);
+                   nw_align(Txp, read, offset_txp, offset_read, Txp.size()-offset_txp, read.size()-offset_read, output);
 
 		   aligned_str.append(output);
                 }
@@ -664,6 +671,8 @@ class SACollector {
 
             std::string seq1 = seq_one.substr(offset_seq1, seq1_len);
 	    std::string seq2 = seq_two.substr(offset_seq2, seq2_len);
+            std::cout << "\n Txp  :  " << seq1;
+            std::cout << "\n Read : " << seq2;
 
 	    int m = seq1_len;
 	    int n = seq2_len;

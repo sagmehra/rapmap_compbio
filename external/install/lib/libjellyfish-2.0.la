@@ -38,4 +38,4 @@ dlopen=''
 dlpreopen=''
 
 # Directory that this library needs to be installed in:
-libdir='/usr/rapmap_compbio/external/install/lib'
+libdir='/home/sagmehra/tem/rapmap_compbio/external/install/lib'
