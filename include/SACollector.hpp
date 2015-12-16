@@ -11,8 +11,8 @@
 class SACollector {
    
    int gap_penalty = -3;
-   int match = 5;
-   int miss = -1;
+   int match = 10;
+   int miss = -2;
     public:
 
     SACollector(RapMapSAIndex* rmi) : rmi_(rmi) {}
@@ -429,11 +429,11 @@ class SACollector {
                 }
             }
         }
-        std::cout << "size:" << fwdSAInts.size() << std::endl;
+        /*std::cout << "size:" << fwdSAInts.size() << std::endl;
         for(int i = 0; i<fwdSAInts.size();i++) {
             std::cout << "match len:" << fwdSAInts[i].len << std::endl;
             std::cout << "match start pos in read:" << fwdSAInts[i].queryPos << std::endl;
-        }
+        }*/
 
 
         if (strictCheck) {
@@ -515,20 +515,21 @@ class SACollector {
 
 		std::string Txp = text.substr(txpStarts[k], txpLen[k]);
 		int offset_txp = myVec[indx].pos+fwdSAInts[indx].len;
+        
                 int offset_read = myVec[indx].queryPos+fwdSAInts[indx].len;
-		aligned_str.append(Txp.substr(myVec[indx].pos,fwdSAInts[indx].len));
-     		std::cout << "Txp substring : " << Txp.substr(myVec[indx].pos,fwdSAInts[indx].len);
+		aligned_str.append(std::to_string(fwdSAInts[indx].len)+'M');//Txp.substr(myVec[indx].pos,fwdSAInts[indx].len));
+     		//std::cout << "Txp substring : " << Txp.substr(myVec[indx].pos,fwdSAInts[indx].len);
 		while(indx < myVec.size()-1)
                 {
-                    std::cout << "Genome position:" << myVec[indx].pos << std::endl;
-                    std::cout << "Query position:" << myVec[indx].queryPos << std::endl;
+                    //std::cout << "Genome position:" << myVec[indx].pos << std::endl;
+                    //std::cout << "Query position:" << myVec[indx].queryPos << std::endl;
 
 		    //int offset_txp = myVec[indx].pos+fwdSAInts[indx].len;
 		    //int offset_read = myVec[indx].queryPos+fwdSAInts[indx].len;
 
  
 		    if(myVec[indx+1].queryPos <= offset_read || myVec[indx+1].pos <= offset_txp) {
-		        std::cout << "Txp Offset : " << offset_txp << " Read Offset:" << offset_read << std::endl;
+		        //std::cout << "Txp Offset : " << offset_txp << " Read Offset:" << offset_read << std::endl;
 			indx++;
 			continue;
                     }
@@ -541,8 +542,8 @@ class SACollector {
 		    aligned_str.append(output);
 
 		    indx++;
-		    aligned_str.append(Txp.substr(myVec[indx].pos,fwdSAInts[indx].len));
-     		    std::cout << "Txp substring : " << Txp.substr(myVec[indx].pos,fwdSAInts[indx].len);
+		    aligned_str.append(std::to_string(fwdSAInts[indx].len)+'M');//Txp.substr(myVec[indx].pos,fwdSAInts[indx].len));
+     		//std::cout << "Txp substring : " << Txp.substr(myVec[indx].pos,fwdSAInts[indx].len);
 		    offset_txp = myVec[indx].pos+fwdSAInts[indx].len;
                     offset_read = myVec[indx].queryPos+fwdSAInts[indx].len;
                 }
@@ -667,12 +668,18 @@ class SACollector {
 	void nw_align(const std::string seq_one, const std::string seq_two, int offset_seq1,
 			int offset_seq2, int seq1_len, int seq2_len, std::string &output)
 	{
+        std::string true_cigar="";
+        char next =' ';
+        int count = 1,flag  = 0;
+        std::vector<int> length_seq;
+        std::vector<int>::iterator it;
 
 
-            std::string seq1 = seq_one.substr(offset_seq1, seq1_len);
+        std::string seq1 = seq_one.substr(offset_seq1, seq1_len);
 	    std::string seq2 = seq_two.substr(offset_seq2, seq2_len);
-            std::cout << "\n Txp  :  " << seq1;
-            std::cout << "\n Read : " << seq2;
+        //std::cout << "\n Txp  : " << seq1;
+        
+        //std::cout << "\n Read : " << seq2;
 
 	    int m = seq1_len;
 	    int n = seq2_len;
@@ -706,6 +713,7 @@ class SACollector {
 
 
 	     std::string align1="", align2="";
+         
 
 	     int i = m, j= n;
 
@@ -713,63 +721,111 @@ class SACollector {
 	     int scr_diag;
 	     int scr_left;
 	     int scr_up;
+         int match_score;
 
 	     while(i && j) {
 
-		scr_cur = score[i][j];
-		scr_diag = score[i-1][j-1];
-		scr_up = score[i][j-1];
-		scr_left = score[i-1][j];
+		scr_cur   = score[i][j];
+		scr_diag  = score[i-1][j-1];
+		scr_up    = score[i][j-1];
+		scr_left  = score[i-1][j];
 
-
-		if(scr_cur == scr_diag + get_match_score(seq1[i-1], seq2[j-1])) {
+        match_score = get_match_score(seq1[i-1], seq2[j-1]);
+		if(scr_cur == scr_diag + match_score) {
 		    align1 += seq1[i-1];
 		    align2 += seq2[j-1];
-
 		    i--;
 		    j--;
 		}
 		else if(scr_cur == scr_left + gap_penalty) {
 		    align1 += seq1[i-1];
 		    align2 += '-';
-			
 		    i--;
 		}
 		else if(scr_cur == scr_up + gap_penalty) {
-	           align1 += '-';
+	       align1 += '-';
 		   align2 += seq2[j-1];
-		
 		   j--;
 		}	
+            if (align1.back() == align2.back()){
+                next= 'M';
+            }else if(align1.back() == '-'){
+                next= 'D';
+            }else if(align2.back() == '-'){
+                next= 'I';
+            }else {
+                next= 'X';
+            }
 
-              }  
+            if(true_cigar.empty())                  //First time, cigar string is empty; add to cigar, do nothing, count initalized to 1
+            {
+                true_cigar+=next;
+            }else{
+                if((true_cigar.back() != next )) {  // pop the current count and add to vector of counts
+                    length_seq.push_back ( count );
+                    true_cigar+=next;
+                    count = 1;
+                }else{                              // same character found - increment count, do nothing
+                    count++;
+
+                }
+            }
+        }  
+        if (i > 0 || j > 0){
+            if (i>0)
+                next ='I';
+            if (j>0)
+                next ='D';
+            flag =1;
+            if((true_cigar.back() != next )) {
+                        length_seq.push_back ( count );
+                        true_cigar+=next;
+                        count = 0;
+            }
+        }
+
+	   while(i>0) {
+    		align1 += seq1[i-1];
+    		align2 += '-';
+            count++;
+    		i--;
+        }   
 
 
-	      while(i>0) {
-
-		align1 += seq1[i-1];
-		align2 += '-';
-		i--;
-
-              }   
-
-
-	      while(j > 0) {
-		align1 += '-';
-		align2 += seq2[j-1];
-		j--;
+	    while(j > 0) {
+    		align1 += '-';
+    		align2 += seq2[j-1];
+            count++;
+    		j--;
 	      }
+        if ((flag == 1) || ( length_seq.size() != true_cigar.length() ))                     //if either of the while loops ran 
+            length_seq.push_back ( count );
 
+
+            std::reverse(length_seq.begin(), length_seq.end());
+            std::reverse(true_cigar.begin(), true_cigar.end());
+            std::string res = "";
+            {
+                int k = 0;
+                for (it=length_seq.begin() ; it<length_seq.end(); it++, k++){
+                        if(*it != 1)
+                            res += std::to_string(*it);
+                        res += true_cigar[k];
+                }
+            }
 	      std::string temp(align2.rbegin(), align2.rend());
 	      std::string orig_seq(align1.rbegin(), align1.rend());
+          output.assign(res);
 
-
-              output.assign(temp);
-	      std::cout << "\nOutput   :  " << output << std::endl; 
-	      std::cout << "Sequence :  " << orig_seq << std::endl; 
+	      //std::cout << "\n    Output   :  "   << temp << std::endl; 
+	      //std::cout << "    Sequence :  "   << orig_seq << std::endl; 
+          //std::cout << "    TrueCigar:  "   << res << std::endl;
+          
 
 	}
+    void rle(const std::string seq_one, std::string &output){
 
+    }
     private:
         RapMapSAIndex* rmi_;
 	/*
