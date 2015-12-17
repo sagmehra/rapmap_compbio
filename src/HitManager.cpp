@@ -73,7 +73,6 @@ namespace rapmap {
                     // add cigar string from processedHits in hits here
                     // cigar string comes from processedHits which is instance of SAHitmap 
 
-                    std::cout << "at collectHitsSimpleSA " << ph.second.cigarStr << std::endl;
 
                     hits.emplace_back(tid, hitPos, isFwd, readLen, 0, false, ph.second.cigarStr);
                     hits.back().mateStatus = mateStatus;

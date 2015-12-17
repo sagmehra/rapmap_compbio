@@ -438,7 +438,7 @@ namespace rapmap {
         //std::cout << "Here in adjustOverhang readLen:" << readLen << "pos:" << std::endl;
 	    cigarStr.clear();
 
-        std::cout << cigarString << std::endl;
+        //std::cout << cigarString << std::endl;
         cigarStr.write(cigarString.c_str());
 
         //string output_from_aligner;
