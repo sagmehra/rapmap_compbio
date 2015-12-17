@@ -2,21 +2,23 @@
 
 To build RapMap, you need a C++11 compliant compiler (g++ >= 4.7 and clang >= 3.4) and CMake. Steps to set the environment for build and run are given below:
 
+```
 [path_to_rapmap] > mkdir build && cd build
 [path_to_rapmap/build] > cmake ..
 [path_to_rapmap/build] > make
 [path_to_rapmap/build] > make install
 [path_to_rapmap/build] > cd ../bin
 [path_to_rapmap/bin] > ./rapmap -h
-
+```
 =====================================
 
 There are currently 4 RapMap subcommands
+```
     pseudoindex   --- builds a k-mer-based index
     pseudomap     --- map reads using a k-mer-based index
     quasiindex --- builds a suffix array-based (SA) index
     quasimap   --- map reads using the SA-based index
-
+```
 Run a corresponding command "rapmap <cmd> -h" for
 more information on each of the possible RapMap
 commands.
